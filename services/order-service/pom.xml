@@ -59,6 +59,12 @@
             <artifactId>log4j-layout-template-json</artifactId>
         </dependency>
 
+        <!-- spring-tx (provides org.springframework.dao) -->
+        <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-tx</artifactId>
+        </dependency>
+
         <!-- Test -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
