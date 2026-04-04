@@ -1,0 +1,85 @@
+server:
+  http_listen_port: 9080
+  grpc_listen_port: 0
+
+positions:
+  filename: /tmp/positions.yaml
+
+clients:
+  - url: http://loki:3100/loki/api/v1/push
+
+scrape_configs:
+  - job_name: docker
+    docker_sd_configs:
+      - host: unix:///var/run/docker.sock
+        refresh_interval: 5s
+        filters:
+          # Only scrape containers that have the logging=promtail label
+          - name: label
+            values: ["logging=promtail"]
+
+    relabel_configs:
+      # Use the container's "service" Docker label as the Loki service stream label
+      - source_labels: [__meta_docker_container_label_service]
+        target_label: service
+
+      # Also capture the container name for additional context
+      - source_labels: [__meta_docker_container_name]
+        regex: '/(.*)'
+        target_label: container
+
+      # Keep the job label
+      - source_labels: [job]
+        target_label: job
+
+    pipeline_stages:
+      # Try to parse the log line as JSON
+      - json:
+          expressions:
+            level: level
+            # Python/FastAPI (structlog) uses "level"
+            # Node.js (winston) uses "level"
+            # Java (logstash-logback-encoder) uses "level"
+            # Go (zerolog) uses "level"
+
+      # Also try the Java/logstash format which uses "level" too
+      # but has a nested structure — extract from root level field
+      - json:
+          expressions:
+            log_level_java: '"level"'
+
+      # Normalize level label: use whichever was found
+      - template:
+          source: level
+          template: '{{ if .Value }}{{ .Value }}{{ else }}info{{ end }}'
+
+      # Set the extracted level as a Loki label
+      - labels:
+          level: level
+
+      # Drop DEBUG logs from reaching Loki to reduce volume (comment out to keep)
+      # - match:
+      #     selector: '{level="debug"}'
+      #     action: drop
+
+      # Set the log timestamp from the parsed JSON if available
+      - json:
+          expressions:
+            ts_python: timestamp    # structlog / winston
+            ts_java: '"@timestamp"' # logstash-logback-encoder
+            ts_go: time             # zerolog
+
+      - timestamp:
+          source: ts_python
+          format: RFC3339Nano
+          action_on_failure: skip
+
+      - timestamp:
+          source: ts_java
+          format: '2006-01-02T15:04:05.000Z'
+          action_on_failure: skip
+
+      - timestamp:
+          source: ts_go
+          format: RFC3339Nano
+          action_on_failure: skip

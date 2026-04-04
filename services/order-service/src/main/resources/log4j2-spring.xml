@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Configuration status="WARN">
+    <Appenders>
+        <Console name="STDOUT" target="SYSTEM_OUT">
+            <!--
+                JsonTemplateLayout writes one JSON object per line.
+                log4j2-template.json defines the field mapping.
+                MDC (ThreadContext) fields appear nested under "context".
+            -->
+            <JsonTemplateLayout eventTemplateUri="classpath:log4j2-template.json"/>
+        </Console>
+    </Appenders>
+
+    <Loggers>
+        <!-- Reduce noise from Spring/Tomcat internals -->
+        <Logger name="org.springframework"         level="INFO"  additivity="false"><AppenderRef ref="STDOUT"/></Logger>
+        <Logger name="org.apache.tomcat"           level="WARN"  additivity="false"><AppenderRef ref="STDOUT"/></Logger>
+        <Logger name="org.apache.catalina"         level="WARN"  additivity="false"><AppenderRef ref="STDOUT"/></Logger>
+        <Logger name="org.hibernate"               level="WARN"  additivity="false"><AppenderRef ref="STDOUT"/></Logger>
+        <Logger name="com.zaxxer.hikari"           level="WARN"  additivity="false"><AppenderRef ref="STDOUT"/></Logger>
+
+        <!-- Service code at DEBUG so all log levels are visible -->
+        <Logger name="com.tinker.orders"           level="DEBUG" additivity="false"><AppenderRef ref="STDOUT"/></Logger>
+
+        <Root level="INFO">
+            <AppenderRef ref="STDOUT"/>
+        </Root>
+    </Loggers>
+</Configuration>
