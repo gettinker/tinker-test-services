@@ -41,6 +41,7 @@ services:
       - GF_AUTH_DISABLE_LOGIN_FORM=false
       - GF_SECURITY_ALLOW_EMBEDDING=true
       - GF_LOG_LEVEL=warn
+      - GF_ANALYTICS_CHECK_FOR_UPDATES=false
     volumes:
       - ./observability/grafana/datasources.yaml:/etc/grafana/provisioning/datasources/datasources.yaml:ro
       - grafana-data:/var/lib/grafana
@@ -49,6 +50,17 @@ services:
     depends_on:
       loki:
         condition: service_healthy
+    restart: unless-stopped
+
+  prometheus:
+    image: prom/prometheus:v2.51.2
+    container_name: prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./observability/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+    networks:
+      - tinker-test
     restart: unless-stopped
 
   promtail:

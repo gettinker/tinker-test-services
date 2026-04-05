@@ -65,6 +65,12 @@
             <artifactId>spring-tx</artifactId>
         </dependency>
 
+        <!-- Prometheus metrics via Micrometer -->
+        <dependency>
+            <groupId>io.micrometer</groupId>
+            <artifactId>micrometer-registry-prometheus</artifactId>
+        </dependency>
+
         <!-- Test -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
