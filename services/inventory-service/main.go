@@ -360,7 +360,15 @@ func triggerDBTimeout(c *gin.Context) {
 		Str("query", "SELECT * FROM inventory WHERE warehouse=$1 AND quantity < $2").
 		Msg("database query timeout — connection pool exhausted")
 
-	result, err := simulateDBQuery(4)
+	var result []Item
+var err error
+for i := 0; i < 3; i++ {
+	result, err = simulateDBQuery(4)
+	if err == nil {
+		break
+	}
+	time.Sleep(2 * time.Second)
+}
 	if err != nil {
 		log.Error().
 			Err(err).
